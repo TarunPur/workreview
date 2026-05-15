@@ -5,6 +5,10 @@ export interface Profile {
   current_title: string | null
   linkedin_url: string | null
   slug: string
+  email: string | null
+  is_claimed: boolean
+  imported_by: string | null
+  claim_token: string | null
   created_at: string
 }
 

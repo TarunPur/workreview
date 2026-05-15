@@ -7,24 +7,20 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  // Split into words and AND them together so "Harsh Julka" only matches
+  // profiles containing both words, not every profile in the table
+  const words = q.split(/\s+/).filter(Boolean)
+
+  let query = supabase
     .from('profiles')
     .select('id, full_name, current_company, current_title, slug')
-    .textSearch('', q, {
-      type: 'websearch',
-      config: 'english',
-    })
     .limit(10)
 
-  if (error) {
-    // Fallback to ilike if full-text search fails
-    const { data: fallback } = await supabase
-      .from('profiles')
-      .select('id, full_name, current_company, current_title, slug')
-      .or(`full_name.ilike.%${q}%,current_company.ilike.%${q}%`)
-      .limit(10)
-    return NextResponse.json(fallback ?? [])
+  for (const word of words) {
+    query = query.or(`full_name.ilike.%${word}%,current_company.ilike.%${word}%`)
   }
+
+  const { data } = await query
 
   return NextResponse.json(data ?? [])
 }
