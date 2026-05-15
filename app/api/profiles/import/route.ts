@@ -13,11 +13,11 @@ async function sendClaimEmail(to: string, name: string, claimToken: string) {
   const claimUrl = `${process.env.NEXT_PUBLIC_APP_URL}/claim/${claimToken}`
 
   if (!process.env.RESEND_API_KEY) {
-    console.log(`[claim email] To: ${to}, URL: ${claimUrl}`)
+    console.log(`[claim email] RESEND_API_KEY not set. To: ${to}, URL: ${claimUrl}`)
     return
   }
 
-  await fetch('https://api.resend.com/emails', {
+  const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -36,6 +36,13 @@ async function sendClaimEmail(to: string, name: string, claimToken: string) {
       `,
     }),
   })
+
+  const data = await res.json()
+  if (!res.ok) {
+    console.error(`[claim email] Resend error for ${to}:`, JSON.stringify(data))
+  } else {
+    console.log(`[claim email] Sent to ${to}, id: ${data.id}`)
+  }
 }
 
 export async function POST(request: NextRequest) {
